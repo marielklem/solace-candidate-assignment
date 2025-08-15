@@ -8,6 +8,7 @@ const setup = () => {
       select: () => ({
         from: () => [],
       }),
+      execute: () => ([])
     };
   }
 
