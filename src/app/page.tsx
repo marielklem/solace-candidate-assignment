@@ -23,22 +23,28 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  const onChange = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const onEnter = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === "Enter") {
-      handleSearch();
+      handleSearch(searchTerms);
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchTerms) {
-      setSearchError("Please enter a search to get started");
-      return;
+  const onChipClick = (speciality: string): void => {
+    setSearchTerms(speciality);
+    setAdvocates([]);
+    handleSearch(speciality);
+  };
+
+  const handleSearch = async (query: string): Promise<void> => {
+    let url = `/api/advocates`;
+    if (query.length > 0) {
+      url = `${url}?query=${encodeURIComponent(query)}`;
     }
 
     setIsLoading(true);
     setSearchError(null);
 
-    fetch(`/api/advocates?query=${encodeURIComponent(searchTerms)}`)
+    fetch(url)
       .then((response) => response.json())
       .then((data) => {
         setAdvocates(data);
@@ -59,9 +65,7 @@ export default function Home() {
     <main style={{ margin: "24px" }}>
       <div className="relative h-[400px] bg-gradient-to-tr from-green-950 to-zinc-900">
         <div className="flex flex-col gap-4 justify-center items-center w-full h-full px-3 md:px-0">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white">
-            Solace Advocates
-          </h1>
+          <h1 className="text-6xl font-bold text-white">Solace Advocates</h1>
           <p className="text-gray-300">Help is on the way</p>
 
           <div className="relative p-3 border border-gray-200 rounded-lg w-full max-w-lg">
@@ -70,14 +74,14 @@ export default function Home() {
               className="rounded-md w-full p-3 "
               placeholder="Find an advocate"
               onChange={(e) => setSearchTerms(e.target.value)}
-              onKeyDown={onChange}
+              onKeyDown={onEnter}
               value={searchTerms}
             />
 
             <button
               type="submit"
               className="absolute right-6 top-6"
-              onClick={handleSearch}
+              onClick={() => handleSearch(searchTerms)}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -134,7 +138,7 @@ export default function Home() {
           {searchError && <h2>{searchError}</h2>}
 
           {/* Search Results */}
-          {advocates.length &&
+          {advocates.length > 0 &&
             advocates.map((advocate) => {
               return (
                 <div
@@ -169,7 +173,7 @@ export default function Home() {
                           <span
                             key={speciality}
                             className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm cursor-pointer"
-                            onClick={() => setSearchTerms(speciality)}
+                            onClick={() => onChipClick(speciality)}
                           >
                             {speciality}
                           </span>
